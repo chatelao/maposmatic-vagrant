@@ -105,7 +105,11 @@ else
 fi
 
 # merge all elevation data into one single large tiled file
-gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif *.hgt.tif -q
+if [ "$SUDO_USER" != "travis" ]; then
+  gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif *.hgt.tif -q
+else
+  gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif N42E006*.hgt.tif -q
+fi
 
 ln -s raw.tif dem-srtm.tiff
 ln -s raw.tif dem_srtm.tiff

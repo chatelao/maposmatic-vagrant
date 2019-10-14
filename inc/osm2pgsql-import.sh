@@ -4,7 +4,9 @@
 #
 #----------------------------------------------------
 
-OSM_EXTRACT="${OSM_EXTRACT:-/vagrant/data.osm.pbf}"
+BASEDIR=${BASEDIR:-/vagrant}
+FILEDIR=${BASEDIR}/files
+OSM_EXTRACT="${OSM_EXTRACT:-${BASEDIR}/data.osm.pbf}"
 
 cd /home/maposmatic
 
@@ -37,7 +39,7 @@ sudo --user=maposmatic osm2pgsql \
 
 for dir in db_indexes db_functions db_views
 do
-  for sql in /vagrant/files/database/$dir/*.sql
+  for sql in ${BASEDIR}/files/database/$dir/*.sql
   do
     sudo -u maposmatic psql gis < $sql
   done
@@ -55,7 +57,7 @@ then
 
     REPLICATION_SEQUENCE_NUMBER="$( printf "%09d" "$(osmium fileinfo -g 'header.option.osmosis_replication_sequence_number' "${OSM_EXTRACT}")" | sed ':a;s@\B[0-9]\{3\}\>@/&@;ta' )"
 
-    cp /vagrant/files/systemd/osm2pgsql-update.* /etc/systemd/system
+    cp ${FILEDIR}/systemd/osm2pgsql-update.* /etc/systemd/system
     chmod 644 /etc/systemd/system/osm2pgsql-update.*
     systemctl daemon-reload
 
@@ -76,5 +78,3 @@ else
 	 --dbname=gis \
 	 --command="UPDATE maposmatic_admin SET last_update = '$timestring'"
 fi
-
-

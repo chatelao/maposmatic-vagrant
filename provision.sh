@@ -6,9 +6,11 @@
 # read from stdin (genenrate-xml.py in this case) we're
 # draining stdin here as the first thing before doing
 # anything else
-if ! test -t 0
-then
-    cat > /dev/null
+if [ "$SUDO_USER" != "travis" ]; then
+  if ! test -t 0
+  then
+     cat > /dev/null
+  fi
 fi
 
 #----------------------------------------------------
@@ -17,13 +19,23 @@ fi
 #
 #----------------------------------------------------
 
-FILEDIR=/vagrant/files
-INCDIR=/vagrant/inc
+echo "SUDO_USER: $SUDO_USER"
+echo "USER: $USER"
 
-if touch /vagrant/can_write_here
+if [ "$SUDO_USER" != "travis" ]; then
+  BASEDIR=/vagrant
+else
+  BASEDIR=$(dirname $(readlink -f $0))
+fi
+echo "Starting from: $BASEDIR"
+
+FILEDIR=${BASEDIR}/files
+INCDIR=${BASEDIR}/inc
+
+if touch ${BASEDIR}/can_write_here
 then
-	CACHEDIR=/vagrant/cache
-	rm /vagrant/can_write_here
+	CACHEDIR=${BASEDIR}/cache
+	rm ${BASEDIR}/can_write_here
 else
 	mkdir -p /home/cache
 	chmod a+rwx /home/cache
@@ -41,7 +53,7 @@ mkdir -p $CACHEDIR
 #
 #----------------------------------------------------
 
-export OSM_EXTRACT=$(ls /vagrant/*.pbf | head -1)
+export OSM_EXTRACT=$(ls ${BASEDIR}/*.pbf | head -1)
 
 if test -f "$OSM_EXTRACT"
 then
@@ -111,8 +123,13 @@ sed -ie 's/localhost/localhost gis-db/g' /etc/hosts
 banner "db setup"
 . $INCDIR/database-setup.sh
 
-banner "places db"
-. $INCDIR/places-database.sh
+#
+# Exclude "places" on travis due to diskspace restrictions
+#
+if [ "$SUDO_USER" != "travis" ]; then
+  banner "places db"
+  . $INCDIR/places-database.sh
+fi
 
 banner "db l10n"
 . $INCDIR/mapnik-german-l10n.sh
@@ -125,12 +142,12 @@ banner "building osgende"
 
 banner "building phyghtmap" # needed by OpenTopoMap
 . $INCDIR/phyghtmap.sh
-
+   
 banner "db import" 
 . $INCDIR/osm2pgsql-import.sh
 
-banner "get bounds"
-. $INCDIR/data-bounds.sh
+banner "get bbox"
+. $INCDIR/data-bbox.sh
 
 banner "DEM setup"
 . $INCDIR/elevation-data.sh
@@ -149,18 +166,18 @@ banner "locales"
 
 banner "shapefiles"
 . $INCDIR/get-shapefiles.sh
-cp /vagrant/files/systemd/shapefile-update.* /etc/systemd/system
+cp ${FILEDIR}/shapefile-update.* /etc/systemd/system
 systemctl daemon-reload
 
 mkdir /home/maposmatic/styles
 
-for style in /vagrant/inc/styles/*.sh
+for style in ${INCDIR}/styles/*.sh
 do
   banner $(basename $style .sh)" style"
   . $style
 done
 
-for overlay in /vagrant/inc/overlays/*.sh
+for overlay in ${INCDIR}/overlays/*.sh
 do
   banner $(basename $overlay .sh)" overlay"
   . $overlay
@@ -209,12 +226,14 @@ banner "umgebungsplaene"
 #
 #-----------------------------------------------------
 
-banner "running tests"
+if [ $USER != "travis" ]; then
+   banner "running tests"
 
-cd /vagrant/test
-chmod a+w .
-rm -f test-* thumbnails/test-*
-./run-tests.sh
+   cd ${BASEDIR}/test
+   chmod a+w .
+   rm -f test-* thumbnails/test-*
+   ./run-tests.sh
+fi
 
 #----------------------------------------------------
 #
@@ -228,5 +247,4 @@ banner "cleanup"
 . $INCDIR/security-quirks.sh
 
 # write back compiler cache
-cp -rn /root/.ccache $CACHEDIR
-
+cp -rn ~/.ccache $CACHEDIR

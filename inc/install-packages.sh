@@ -7,6 +7,7 @@
 # uncomment this when using an old Ubuntu release no longer supported
 # sed -i -e's/archive/old-releases/g' /etc/apt/sources.list
 
+FILEDIR=${BASEDIR:-/vagrant}/files
 
 # we don't have "banner" installed yet at this point
 echo "   ##    #####    #####          #####     ##     ####   #    #    ##     #### "
@@ -144,7 +145,7 @@ npm install -g carto
 # so we need to use the working upstream Debian package
 
 banner "ms fonts"
-if ! dpkg -i /vagrant/files/ttf-mscorefonts-installer_3.6_all.deb > /dev/null 2>/tmp/ms-fonts.log
+if ! dpkg -i "${FILEDIR}/ttf-mscorefonts-installer_3.6_all.deb" > /dev/null 2>/tmp/ms-fonts.log
 then
 	cat 1>&2 /tmp/ms-fonts.log
 fi

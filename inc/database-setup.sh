@@ -7,7 +7,12 @@
 # add "gis" database users
 sudo --user=postgres createuser --superuser --no-createdb --no-createrole maposmatic
 sudo -u postgres createuser -g maposmatic root
-sudo -u postgres createuser -g maposmatic vagrant
+
+if [ "$SUDO_USER" != "travis" ]; then
+  sudo -u postgres createuser -g maposmatic vagrant
+else
+  sudo -u postgres createuser -g maposmatic travis
+fi
 
 
 # creade database for osm2pgsql import 

@@ -1,17 +1,21 @@
 #! /bin/bash
 
+BASEDIR="${BASEDIR:-/vagrant}"
+FILEDIR=${BASEDIR}/files
+OSM_EXTRACT="${OSM_EXTRACT:-${BASEDIR}/data.osm.pbf}"
+
 cd /home/maposmatic
 
 
 
 # read SRTM 90m zone name -> area mapping table
 echo "Importing SRTM zone database"
-sudo -u maposmatic psql gis < /vagrant/files/database/db_dumps/srtm_zones.sql > /dev/null
+sudo -u maposmatic psql gis < "${FILEDIR}/database/db_dumps/srtm_zones.sql" > /dev/null
 
 mkdir -p elevation-data
 cd elevation-data
 
-echo "Downloading SRTM arcive files"
+echo "Downloading SRTM archive files"
 
 mkdir -p srtm-data
 cd srtm-data
@@ -71,7 +75,7 @@ mkdir -p dem
 cd dem
 
 # file taken from OpenTopoMap repository, which may not be installed at this point yet
-cp /vagrant/files/relief_color_text_file.txt .
+cp "${FILEDIR}/relief_color_text_file.txt" .
 
 # fill empty spaces
 for file in $(find /home/maposmatic/elevation-data/srtm-data -name "*.hgt" | sort)
@@ -106,7 +110,7 @@ gdaldem hillshade -z 7 -combined -compute_edges -co compress=lzw -co predictor=2
 # TODO: not used? gdal_translate -co compress=JPEG -co bigtiff=yes -co tiled=yes hillshade-90.tif hillshade-90-jpeg.tif -q
 
 # set up countours database and table schema
-sudo -u maposmatic psql --quiet gis < /vagrant/files/database/db_dumps/contours_schema.sql 
+sudo -u maposmatic psql --quiet gis < "${FILEDIR}/database/db_dumps/contours_schema.sql"
 
 # create contours shapefile and imports its data into the database
 gdal_contour -i 10 -a ele warp-90.tif . -q

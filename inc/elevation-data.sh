@@ -6,8 +6,6 @@ OSM_EXTRACT="${OSM_EXTRACT:-${BASEDIR}/data.osm.pbf}"
 
 cd /home/maposmatic
 
-
-
 # read SRTM 90m zone name -> area mapping table
 echo "Importing SRTM zone database"
 sudo -u maposmatic psql gis < "${FILEDIR}/database/db_dumps/srtm_zones.sql" > /dev/null
@@ -30,6 +28,7 @@ eval b=$bbox
 
 # create bounding box polygon WKT string
 polygon="POLYGON((${b[1]} ${b[0]}, ${b[1]} ${b[2]}, ${b[3]} ${b[2]}, ${b[3]} ${b[0]}, ${b[1]} ${b[0]}))"
+echo "Bounding box: ${polygon} for ${OSM_EXTRACT}"
 
 # now download all zones the import bounding box overlaps with
 for zone in $(psql gis --tuples-only --command="select zone from srtm_zones where ST_INTERSECTS(way, ST_GeomFromText('$polygon', 4326))")
@@ -54,16 +53,29 @@ echo "SRTM hillshading for PisteMap"
 mkdir -p srtm
 cd srtm
 
-for file in $(find /home/maposmatic/elevation-data/srtm-data/ -name "*.hgt" | sort)
-do
-    base=$(basename $file .hgt)
-    echo "  processing $base"
-    gdal_translate -q -of GTiff -co "TILED=YES" -a_srs "+proj=latlong" $file ${base}_adapted.tif
+if [ "$SUDO_USER" != "travis" ]; then
+  for file in $(find /home/maposmatic/elevation-data/srtm-data/ -name "*.hgt" | sort)
+  do
+      base=$(basename $file .hgt)
+      echo "  processing $base"
+      gdal_translate -q -of GTiff -co "TILED=YES" -a_srs "+proj=latlong" $file ${base}_adapted.tif
 
-    gdalwarp -q -multi -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi ${base}_adapted.tif ${base}_warped.tif
+      gdalwarp -q -multi -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi ${base}_adapted.tif ${base}_warped.tif
 
-    gdaldem hillshade -q ${base}_warped.tif ${base}_hillshade.tif
-done
+      gdaldem hillshade -q ${base}_warped.tif ${base}_hillshade.tif
+  done
+else
+  for file in $(find /home/maposmatic/elevation-data/srtm-data/ -name "*N42E006*.hgt" | sort)
+  do
+      base=$(basename $file .hgt)
+      echo "  processing $base"
+      gdal_translate -q -of GTiff -co "TILED=YES" -a_srs "+proj=latlong" $file ${base}_adapted.tif
+
+      gdalwarp -q -multi -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi ${base}_adapted.tif ${base}_warped.tif
+
+      gdaldem hillshade -q ${base}_warped.tif ${base}_hillshade.tif
+  done
+fi
 
 cd ..
 
@@ -77,12 +89,20 @@ cd dem
 # file taken from OpenTopoMap repository, which may not be installed at this point yet
 cp "${FILEDIR}/relief_color_text_file.txt" .
 
-# fill empty spaces
-for file in $(find /home/maposmatic/elevation-data/srtm-data -name "*.hgt" | sort)
-do
-  echo "  processing "$(basename $file .hgt)
-  gdal_fillnodata.py -q $file $(basename $file).tif
-done
+if [ "$SUDO_USER" != "travis" ]; then
+  # fill empty spaces
+  for file in $(find /home/maposmatic/elevation-data/srtm-data -name "*.hgt" | sort)
+  do
+    echo "  processing "$(basename $file .hgt)
+    gdal_fillnodata.py -q $file $(basename $file).tif
+  done
+else
+  for file in $(find /home/maposmatic/elevation-data/srtm-data -name "*N42E006*.hgt" | sort)
+  do
+    echo "  processing "$(basename $file .hgt)
+    gdal_fillnodata.py -q $file $(basename $file).tif
+  done
+fi
 
 # merge all elevation data into one single large tiled file
 gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif *.hgt.tif -q

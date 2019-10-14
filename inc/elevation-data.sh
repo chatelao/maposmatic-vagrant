@@ -65,7 +65,7 @@ if [ "$SUDO_USER" != "travis" ]; then
       gdaldem hillshade -q ${base}_warped.tif ${base}_hillshade.tif
   done
 else
-  for file in $(find /home/maposmatic/elevation-data/srtm-data/ -name "*N42E006*.hgt" | sort)
+  for file in $(find /home/maposmatic/elevation-data/srtm-data/ -name "*N{42..43}E00{6..7}*.hgt" | sort)
   do
       base=$(basename $file .hgt)
       echo "  processing $base"
@@ -97,7 +97,7 @@ if [ "$SUDO_USER" != "travis" ]; then
     gdal_fillnodata.py -q $file $(basename $file).tif
   done
 else
-  for file in $(find /home/maposmatic/elevation-data/srtm-data -name "*N42E006*.hgt" | sort)
+  for file in $(find /home/maposmatic/elevation-data/srtm-data -name "*N{42..43}E00{6..7}*.hgt" | sort)
   do
     echo "  processing "$(basename $file .hgt)
     gdal_fillnodata.py -q $file $(basename $file).tif
@@ -108,7 +108,7 @@ fi
 if [ "$SUDO_USER" != "travis" ]; then
   gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif *.hgt.tif -q
 else
-  gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif N42E006*.hgt.tif -q
+  gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif N{42..43}E00{6..7}*.hgt.tif -q
 fi
 
 ln -s raw.tif dem-srtm.tiff

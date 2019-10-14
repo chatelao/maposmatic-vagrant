@@ -1,0 +1,34 @@
+dist: bionic
+
+addons:
+  postgresql: 11
+  apt:
+    packages:
+    - postgresql-server-dev-11
+    - postgresql-11-postgis-2.5
+    - postgresql-11-postgis-2.5-scripts
+
+before_install:
+  - sudo /etc/init.d/postgresql stop
+  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/11/main/postgresql.conf
+  - sudo cp /etc/postgresql/{9.6,11}/main/pg_hba.conf
+  - sudo service postgresql restart 11
+  - sleep 15
+  - psql -c "select * from pg_settings where name = 'port';"
+  - psql --version  
+  - sudo chmod -R go+rx /home/travis
+  - cd ${TRAVIS_BUILD_DIR}
+  - wget https://download.geofabrik.de/europe/monaco-latest.osm.pbf
+  - sudo chmod 755 ./provision.sh
+  - sudo ./provision.sh
+
+before_script:
+  - cd ${TRAVIS_BUILD_DIR}/test
+  - chmod a+w .
+  - rm -f test-* thumbnails/test-*
+  - ls -ltra
+  - mkdir -p thumbnails
+
+script:
+  - sudo ./run-tests.sh
+  - ls -ltra thumbnails

@@ -6,7 +6,11 @@ CONFIG="$PROJECT/.ocitysmap.conf"
 LAYOUT="single_page_index_side"
 ORIENTATION="landscape"
 
-BBOX="52.0100,8.5122 52.0300,8.5432" # Bielefeld
+if [ "$SUDO_USER" != "travis" ]; then
+  BBOX="52.0100,8.5122 52.0300,8.5432"              # Bielefeld
+else
+  BBOX="43.7247599,7.4090279,43.7519311,7.4398704"  # Monaco
+fi
 
 PAPER="Din A4"
 THUMB_WIDTH="400"
@@ -98,5 +102,3 @@ do
   php index.php > index.html
   ( cd thumbnails && php index.php > index.html )
 done
-
-

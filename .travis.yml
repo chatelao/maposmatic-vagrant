@@ -30,5 +30,5 @@ before_script:
   - mkdir -p thumbnails
 
 script:
-  - sudo ./run-tests.sh
+  - ./run-tests.sh
   - ls -ltra thumbnails

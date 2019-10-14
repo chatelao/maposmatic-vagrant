@@ -146,8 +146,8 @@ banner "building phyghtmap" # needed by OpenTopoMap
 banner "db import" 
 . $INCDIR/osm2pgsql-import.sh
 
-banner "get bbox"
-. $INCDIR/data-bbox.sh
+banner "get bounds"
+. $INCDIR/data-bounds.sh
 
 banner "DEM setup"
 . $INCDIR/elevation-data.sh

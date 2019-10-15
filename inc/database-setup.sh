@@ -15,7 +15,7 @@ else
 fi
 
 
-# creade database for osm2pgsql import 
+# create database for osm2pgsql import 
 sudo --user=postgres createdb --encoding=UTF8 --locale=en_US.UTF-8 --template=template0 --owner=maposmatic gis
 
 # set up PostGIS for osm2pgsql database
@@ -30,7 +30,7 @@ sudo --user=postgres psql --dbname=gis --command="CREATE EXTENSION hstore"
 sudo --user=maposmatic psql --dbname=gis --command="CREATE TABLE maposmatic_admin (last_update timestamp)"
 sudo --user=maposmatic psql --dbname=gis --command="INSERT INTO maposmatic_admin VALUES ('1970-01-01 00:00:00')"
 
-# creade database for maposmatic
+# create database for maposmatic
 sudo --user=postgres createdb --encoding=UTF8 --locale=en_US.UTF-8 --template=template0 --owner=maposmatic maposmatic
 
 # set password for gis database user

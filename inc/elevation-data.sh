@@ -89,27 +89,21 @@ cd dem
 # file taken from OpenTopoMap repository, which may not be installed at this point yet
 cp "${FILEDIR}/relief_color_text_file.txt" .
 
-if [ "$SUDO_USER" != "travis" ]; then
-  # fill empty spaces
-  for file in $(find /home/maposmatic/elevation-data/srtm-data -name "*.hgt" | sort)
-  do
-    echo "  processing "$(basename $file .hgt)
-    gdal_fillnodata.py -q $file $(basename $file).tif
-  done
-else
-  for file in $(find /home/maposmatic/elevation-data/srtm-data -name "*N{42..43}E00{6..7}*.hgt" | sort)
-  do
-    echo "  processing "$(basename $file .hgt)
-    gdal_fillnodata.py -q $file $(basename $file).tif
-  done
-fi
-
 # merge all elevation data into one single large tiled file
 if [ "$SUDO_USER" != "travis" ]; then
-  gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif *.hgt.tif -q
+  area_filter=*
 else
-  gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif N{42..43}E00{6..7}*.hgt.tif -q
+  area_filter=N{42..43}E00{6..7}
 fi
+
+# fill empty spaces
+for file in $(find /home/maposmatic/elevation-data/srtm-data -name "${area_filter}.hgt" | sort)
+do
+  echo "  processing "$(basename $file .hgt)
+  gdal_fillnodata.py -q $file $(basename $file).tif
+done
+
+gdal_merge.py -n 32767 -co BIGTIFF=YES -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 -o raw.tif ${area_filter}.hgt.tif -q
 
 ln -s raw.tif dem-srtm.tiff
 ln -s raw.tif dem_srtm.tiff

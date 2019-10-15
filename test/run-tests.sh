@@ -51,8 +51,9 @@ do
   do
     base=test-base-$style-$format
     printf "... %-4s " $format
-    echo "ocitysmap --config=$CONFIG --bounding-box=$BBOX --title='Test $style ($format)' --format=$format --prefix=$base --language=de_DE.utf8 --layout=$LAYOUT --orientation=$ORIENTATION --paper-format='$PAPER' --style=$style" > $base.sh
     chmod a+x $base.sh
+    echo "ocitysmap --config=$CONFIG --bounding-box=$BBOX --title='Test $style ($format)' --format=$format --prefix=$base --language=de_DE.utf8 --layout=$LAYOUT --orientation=$ORIENTATION --paper-format='$PAPER' --style=$style"
+    echo "ocitysmap --config=$CONFIG --bounding-box=$BBOX --title='Test $style ($format)' --format=$format --prefix=$base --language=de_DE.utf8 --layout=$LAYOUT --orientation=$ORIENTATION --paper-format='$PAPER' --style=$style" > $base.sh
     /usr/bin/time -q -f "%E" -o $base.time ./$base.sh > $base.log 2> $base.err
     cat $base.time
   done

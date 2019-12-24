@@ -95,7 +95,6 @@ apt-get install --quiet=2 --assume-yes \
     python3-psycopg2 \
     python3-shapely \
     python3-slugify \
-    python3-sqlalchemy \
     python3-urllib3 \
     subversion \
     sysvbanner \
@@ -124,7 +123,8 @@ pip3 install --ignore-installed \
      pycairo \
      pyproj \
      qrcode \
-     sqlalchemy-utils \
+     "sqlalchemy==1.2" \
+     "sqlalchemy-utils==0.35" \
      utm \
      > /dev/null
 

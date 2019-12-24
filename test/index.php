@@ -1,7 +1,7 @@
 <html>
 <head><title>Test Results</title></head>
 <body>
-<a href="/test/thumbnails/">Thumbnails</a><hr/>
+<a href="thumbnails/">Thumbnails</a><hr/>
 <?php
 
 $results = [];
